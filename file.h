@@ -33,5 +33,6 @@ struct devsw {
 };
 
 extern struct devsw devsw[];
+extern int readcounter;
 
 #define CONSOLE 1

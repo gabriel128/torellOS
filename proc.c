@@ -38,10 +38,10 @@ struct cpu*
 mycpu(void)
 {
   int apicid, i;
-  
+
   if(readeflags()&FL_IF)
     panic("mycpu called with interrupts enabled\n");
-  
+
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
@@ -124,7 +124,7 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
   p = allocproc();
-  
+
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
@@ -142,6 +142,7 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
+  p->tickets = 1;
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
   // writes to be visible, and the lock is also needed
@@ -196,6 +197,8 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
+
+  np->tickets = curproc->tickets;
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
@@ -275,7 +278,7 @@ wait(void)
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-  
+
   acquire(&ptable.lock);
   for(;;){
     // Scan through table looking for exited children.
@@ -319,39 +322,88 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+
+unsigned long next=1;
+int random_generator(int rand_max){
+  next = next * 1103515245 + 12345;
+  int rand=((unsigned)(next/65536) % 32768);
+  //above are the default implemenation of random generator with random max value 32768
+  //need to map it to the
+  int result = rand % rand_max+1;
+  return result;
+}
+
+
+// Loop over process table looking for process to run.
+// Round Robin
+/* for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){ */
+/*   if(p->state != RUNNABLE) */
+/*     continue; */
+
+/*   cprintf("[PID %d | Name: %s] Tickets: %d \n", p->pid, p->name, p->tickets); */
+
+/*   // Switch to chosen process.  It is the process's job */
+/*   // to release ptable.lock and then reacquire it */
+/*   // before jumping back to us. */
+/*   c->proc = p; */
+/*   switchuvm(p); */
+/*   p->state = RUNNING; */
+/*   swtch(&(c->scheduler), p->context); */
+/*   switchkvm(); */
+
+/*   // Process is done running for now. */
+/*   // It should have changed its p->state before coming back. */
+/*   c->proc = 0; */
+/* } */
 void
 scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
-    // Loop over process table looking for process to run.
+    int counter = 0;
+    int total_tickets = 0;
+
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+
+      if(p->state != RUNNABLE)
+        continue;
+
+      total_tickets += p->tickets;
+    }
+
+    int winner = random_generator(total_tickets + 1);
+
     acquire(&ptable.lock);
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
+      counter += p->tickets;
+
+      /* cprintf("[PID %d | Name: %s] Tickets: %d Winner: %d Counter: %d \n", p->pid, p->name, p->tickets, winner, counter); */
+
+      if(counter < winner)
+        continue;
+
+      cprintf("Selected [PID %d | Name: %s] Tickets: %d Winner: %d Counter: %d \n", p->pid, p->name, p->tickets, winner, counter);
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
       swtch(&(c->scheduler), p->context);
       switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
       c->proc = 0;
+      counter = 0;
+      break;
     }
     release(&ptable.lock);
-
   }
 }
 
@@ -418,7 +470,7 @@ void
 sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
-  
+
   if(p == 0)
     panic("sleep");
 
