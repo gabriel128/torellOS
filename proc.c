@@ -365,6 +365,7 @@ scheduler(void)
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    acquire(&ptable.lock);
 
     int counter = 0;
     int total_tickets = 0;
@@ -380,7 +381,6 @@ scheduler(void)
 
     int winner = random_generator(total_tickets + 1);
 
-    acquire(&ptable.lock);
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)

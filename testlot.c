@@ -3,7 +3,7 @@
 #include "user.h"
 #include "fs.h"
 
-/* #define N  10 */
+#define N  5
 
 
 int
@@ -11,20 +11,22 @@ main(int argc, char *argv[])
 {
 
   int i;
-  for(i = 0; i < 4; i++){
-    int rc2;
-    rc2= fork();
-    if (rc2 == 0) {
-      settickets(80);
-      int rc;
-      rc= fork();
-      if (rc == 0) {
+  for(i = 0; i < N; i++){
+    int rc;
+    rc = fork();
+
+    if (rc == 0) {
+      if(i % 2 == 0) {
+        settickets(80);
+      } else {
         settickets(20);
       }
-      wait();
     }
   }
 
-  wait();
+  for(i = 0; i < (N); i++){
+    wait();
+  }
+
   exit();
 }
