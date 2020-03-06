@@ -40,7 +40,7 @@ forktest(void)
     }
   }
 
-  if(wait() != -1){
+  if(nap() != -1){
     printf(1, "wait got too many\n");
     exit();
   }

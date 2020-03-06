@@ -27,6 +27,19 @@ sys_wait(void)
 }
 
 int
+sys_nap(void)
+{
+  if(BABY_IS_BORN) {
+    cprintf("Forget about it\n");
+
+    exit();
+    return -1;
+  } else {
+    return wait();
+  }
+}
+
+int
 sys_kill(void)
 {
   int pid;
