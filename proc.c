@@ -393,7 +393,7 @@ scheduler(void)
       if(counter < winner)
         continue;
 
-      cprintf("Selected [PID %d | Name: %s] Tickets: %d Winner: %d Counter: %d \n", p->pid, p->name, p->tickets, winner, counter);
+      /* cprintf("Selected [PID %d | Name: %s] Tickets: %d Winner: %d Counter: %d \n", p->pid, p->name, p->tickets, winner, counter); */
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
