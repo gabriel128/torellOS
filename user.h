@@ -25,6 +25,7 @@ int sleep(int);
 int uptime(void);
 int settickets(int);
 int nap(void);
+int clone(void(*func)(void *), void *arg1, void *stack);
 
 // ulib.c
 int stat(const char*, struct stat*);

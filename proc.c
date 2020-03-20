@@ -224,6 +224,63 @@ fork(void)
   return pid;
 }
 
+int
+clone(void(*func)(void *), void *arg, void *stack)
+{
+  if((uint) stack % PGSIZE != 0)
+    return -1;
+
+  int i, pid;
+  struct proc *np;
+  struct proc *curproc = myproc();
+
+  // Allocate process.
+  if((np = allocproc()) == 0){
+    return -1;
+  }
+
+  np->pgdir = curproc->pgdir;
+  np->tickets = curproc->tickets;
+  np->sz = curproc->sz;
+  np->parent = curproc;
+  *np->tf = *curproc->tf;
+
+  uint ustack[2];
+  uint sp = (uint) stack+PGSIZE;
+
+  ustack[0] = 0xffffffff;
+  ustack[1] = (uint)arg;
+
+  sp -= 8;
+
+  if(copyout(np->pgdir, sp, ustack, 8) < 0)
+    return -1;
+
+  np->tf->eax = 0;
+
+  np->tf->eip = (uint)func;
+  np->tf->esp = (uint)sp;
+  np->tf->ebp = np->tf->esp;
+
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+
+  np->cwd = idup(curproc->cwd);
+
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+  pid = np->pid;
+
+  acquire(&ptable.lock);
+
+  np->state = RUNNABLE;
+
+  release(&ptable.lock);
+
+  return pid;
+}
+
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.

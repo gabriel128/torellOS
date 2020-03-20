@@ -39,6 +39,7 @@ sys_nap(void)
   }
 }
 
+
 int
 sys_kill(void)
 {
@@ -101,4 +102,21 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int
+sys_clone(void)
+{
+  void (*f)(void *);
+  void *arg;
+  void *stack;
+
+  if(argptr(0, (void*)&f, sizeof(void*)) < 0)
+    return -1;
+  if(argptr(1, (void*)&arg, sizeof(void*)) < 0)
+    return -1;
+  if(argptr(2, (void*)&stack, sizeof(void*)) < 0)
+    return -1;
+
+  return clone(f, arg, stack);
 }
