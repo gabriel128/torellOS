@@ -26,19 +26,20 @@ void worker(void *arg_ptr);
 int
 main(int argc, char *argv[])
 {
-   /* ppid = getpid(); */
+   ppid = getpid();
 
-   /* int fd = open("tmp", O_WRONLY|O_CREATE); */
-   /* assert(fd == 3); */
-   /* int clone_pid = thread_create(worker, 0); */
-   /* int clone_pid2 = thread_create(worker, 0); */
-   /* printf(1,"clone pid=%d\n",clone_pid); */
-   /* printf(1,"clone pid2=%d\n",clone_pid2); */
-   /* assert(clone_pid > 0); */
-   /* while(!newfd); */
-   /* assert(write(newfd, "goodbye\n", 8) == -1); */
-   /* printf(1, "TEST PASSED\n"); */
-   /* printf(1, "Global = %d\n", global); */
+   int fd = open("tmp", O_WRONLY|O_CREATE);
+   assert(fd == 3);
+
+   int clone_pid = thread_create(worker, 0);
+   int clone_pid2 = thread_create(worker, 0);
+   printf(1,"clone pid=%d\n",clone_pid);
+   printf(1,"clone pid2=%d\n",clone_pid2);
+   assert(clone_pid > 0);
+   while(!newfd);
+   assert(write(newfd, "goodbye\n", 8) == -1);
+   printf(1, "TEST PASSED\n");
+   printf(1, "Global = %d\n", global);
    exit();
 }
 
@@ -47,7 +48,7 @@ worker(void *arg_ptr) {
    assert(write(3, "hello\n", 6) == 6);
 
    int i;
-   for(i = 0; i <100000; i++)
+   for(i = 0; i <10000000; i++)
      global++;
    xchg(&newfd, open("tmp2", O_WRONLY|O_CREATE));
    printf(1, "HERE\n");

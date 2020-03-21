@@ -38,5 +38,6 @@ char* gets(char*, int max);
 uint strlen(const char*);
 void* memset(void*, int, uint);
 void* malloc(uint);
+int thread_create(void (*start_routine)(void*), void *arg);
 void free(void*);
 int atoi(const char*);
