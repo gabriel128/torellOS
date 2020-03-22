@@ -1,3 +1,23 @@
+## TorellOS
+
+I wanted to play with sytem programming for a while so I picked the xv6 kernel and starte
+modifying it with ideas I got from "the internet", books and some bits of my own.
+
+So far I added:
+
+- A few systemcalls to do several things like naps
+- Added a lottery scheduler (It's commented atm because the default Round Robin one is easier to reason about)
+- Fixed the null dereference issue and added made the code read only
+- Added Kernel Threads
+- Since I had kernel threads and I was able to share the heap I added locks
+- Added a classic spin lock using xchg (instead of spining and wasting CPUs timeslices I'm yielding to not waste CPU)
+- Added a ticket lock using fetch and add (same yield think as above)
+
+
+
+### The following is the xv6 stuff for reference, copyright and all that
+
+
 xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern x86-based multiprocessor using ANSI C.
@@ -32,17 +52,3 @@ Wolovick, wxdao, Grant Wu, Jindong Zhang, Icenowy Zheng, and Zou Chang Wei.
 
 The code in the files that constitute xv6 is
 Copyright 2006-2018 Frans Kaashoek, Robert Morris, and Russ Cox.
-
-ERROR REPORTS
-
-We switched our focus to xv6 on RISC-V; see the mit-pdos/xv6-riscv.git
-repository on github.com.
-
-BUILDING AND RUNNING XV6
-
-To build xv6 on an x86 ELF machine (like Linux or FreeBSD), run
-"make". On non-x86 or non-ELF machines (like OS X, even on x86), you
-will need to install a cross-compiler gcc suite capable of producing
-x86 ELF binaries (see https://pdos.csail.mit.edu/6.828/).
-Then run "make TOOLPREFIX=i386-jos-elf-". Now install the QEMU PC
-simulator and run "make qemu".
