@@ -241,11 +241,11 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 
     uint flags;
 
-    if(a == UCODEINIT) {
-      flags = PTE_P | PTE_U;
-    } else {
-      flags = PTE_W | PTE_U;
-    }
+    /* if(a == UCODEINIT) { */
+    /*   flags = PTE_P | PTE_U; */
+    /* } else { */
+    flags = PTE_W | PTE_U;
+    /* } */
 
     if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), flags) < 0){
       cprintf("allocuvm out of memory (2)\n");
@@ -331,7 +331,7 @@ copyuvm(pde_t *pgdir, uint sz)
 
   if((d = setupkvm()) == 0)
     return 0;
-  for(i = PGSIZE; i < sz; i += PGSIZE){
+  for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
@@ -400,4 +400,3 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 // Blank page.
 //PAGEBREAK!
 // Blank page.
-

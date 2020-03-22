@@ -2,7 +2,11 @@
 #include "stat.h"
 #include "user.h"
 #include "param.h"
+#include "x86.h"
+#include "traps.h"
+#include "fcntl.h"
 
+#define PGSIZE 4096
 // Memory allocator by Kernighan and Ritchie,
 // The C programming Language, 2nd ed.  Section 8.7.
 
@@ -87,4 +91,59 @@ malloc(uint nbytes)
       if((p = morecore(nunits)) == 0)
         return 0;
   }
+}
+
+int
+thread_create(void(*func)(void *), void *arg) {
+  void *stack = malloc(PGSIZE*2);
+
+  if (stack == (void*)0)
+    return -1;
+
+  if((uint)stack % PGSIZE)
+    stack = stack + (PGSIZE - (uint)stack % PGSIZE);
+
+  return clone(func, arg, stack);
+}
+
+
+int
+thread_join() {
+  void *stack = malloc(sizeof(void*));
+  int result = join(&stack);
+
+  free(stack);
+
+  return result;
+}
+
+lock_t*
+init_lock() {
+  lock_t *lock = malloc(sizeof(lock_t));
+  lock->locked = 0;
+  lock->ticket = 0;
+  lock->turn = 0;
+  return lock;
+}
+
+void acquire_mutex_lock(lock_t *lock) {
+  while(xchg(&lock->locked, 1) != 0)
+     yieldcpu(); // Yield to avoid unnecessary spinning */
+    ;
+};
+
+void release_mutex_lock(lock_t *lock) {
+  lock->locked = 0;
+};
+
+void acquire_ticket_lock(lock_t *lock) {
+  int myturn = fetch_and_add(&lock->ticket, 1);
+
+  while(lock->turn != myturn)
+    yieldcpu(); // Yield to avoid unnecessary spinning
+    ;
+}
+
+void release_ticket_lock(lock_t *lock) {
+  lock->turn = lock->turn + 1 ;
 }
