@@ -131,3 +131,8 @@ sys_join(void)
 
   return join(stack);
 }
+
+void
+sys_yieldcpu(void) {
+  yield();
+}

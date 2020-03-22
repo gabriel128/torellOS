@@ -24,3 +24,4 @@
 #define SYS_nap  23
 #define SYS_clone  24
 #define SYS_join  25
+#define SYS_yieldcpu  26

@@ -17,7 +17,7 @@
 
 int ppid;
 int *global;
-int loops = 100;
+int loops = 500;
 
 lock_t *lock;
 lock_t *ticket_lock;

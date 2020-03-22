@@ -35,7 +35,7 @@ int settickets(int);
 int nap(void);
 int clone(void(*func)(void *), void *arg1, void *stack);
 int join(void **stack);
-
+void yieldcpu(void);
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);

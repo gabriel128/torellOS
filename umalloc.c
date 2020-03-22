@@ -128,7 +128,7 @@ init_lock() {
 
 void acquire_mutex_lock(lock_t *lock) {
   while(xchg(&lock->locked, 1) != 0)
-    sleep(2);
+     yieldcpu(); // Yield to avoid unnecessary spinning */
     ;
 };
 
@@ -140,7 +140,7 @@ void acquire_ticket_lock(lock_t *lock) {
   int myturn = fetch_and_add(&lock->ticket, 1);
 
   while(lock->turn != myturn)
-    sleep(2);
+    yieldcpu(); // Yield to avoid unnecessary spinning
     ;
 }
 
