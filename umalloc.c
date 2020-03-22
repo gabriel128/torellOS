@@ -2,6 +2,9 @@
 #include "stat.h"
 #include "user.h"
 #include "param.h"
+#include "x86.h"
+#include "traps.h"
+#include "fcntl.h"
 
 #define PGSIZE 4096
 // Memory allocator by Kernighan and Ritchie,
@@ -101,4 +104,46 @@ thread_create(void(*func)(void *), void *arg) {
     stack = stack + (PGSIZE - (uint)stack % PGSIZE);
 
   return clone(func, arg, stack);
+}
+
+
+int
+thread_join() {
+  void *stack = malloc(sizeof(void*));
+  int result = join(&stack);
+
+  free(stack);
+
+  return result;
+}
+
+lock_t*
+init_lock() {
+  lock_t *lock = malloc(sizeof(lock_t));
+  lock->locked = 0;
+  lock->ticket = 0;
+  lock->turn = 0;
+  return lock;
+}
+
+void acquire_mutex_lock(lock_t *lock) {
+  while(xchg(&lock->locked, 1) != 0)
+    sleep(2);
+    ;
+};
+
+void release_mutex_lock(lock_t *lock) {
+  lock->locked = 0;
+};
+
+void acquire_ticket_lock(lock_t *lock) {
+  int myturn = fetch_and_add(&lock->ticket, 1);
+
+  while(lock->turn != myturn)
+    sleep(2);
+    ;
+}
+
+void release_ticket_lock(lock_t *lock) {
+  lock->turn = lock->turn + 1 ;
 }

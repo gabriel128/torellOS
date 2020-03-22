@@ -1,5 +1,13 @@
+#include "types.h"
+
 struct stat;
 struct rtcdate;
+
+typedef struct __lock_t {
+  uint locked;
+  int turn;
+  int ticket;
+} lock_t;
 
 // system calls
 int fork(void);
@@ -26,6 +34,7 @@ int uptime(void);
 int settickets(int);
 int nap(void);
 int clone(void(*func)(void *), void *arg1, void *stack);
+int join(void **stack);
 
 // ulib.c
 int stat(const char*, struct stat*);
@@ -39,5 +48,11 @@ uint strlen(const char*);
 void* memset(void*, int, uint);
 void* malloc(uint);
 int thread_create(void (*start_routine)(void*), void *arg);
+int thread_join();
+lock_t* init_lock(void);
+void acquire_mutex_lock(lock_t *lock);
+void release_mutex_lock(lock_t *lock);
+void acquire_ticket_lock(lock_t *lock);
+void release_ticket_lock(lock_t *lock);
 void free(void*);
 int atoi(const char*);

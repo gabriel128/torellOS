@@ -120,3 +120,14 @@ sys_clone(void)
 
   return clone(f, arg, stack);
 }
+
+int
+sys_join(void)
+{
+  void **stack;
+
+  if(argptr(0, (void*)&stack, sizeof(void**)) < 0)
+    return -1;
+
+  return join(stack);
+}
