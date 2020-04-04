@@ -123,7 +123,7 @@ int main() {
   struct dirent *rootdir_dot = (struct dirent *) (img + BSIZE*(root_inode->addrs[0]));
   struct dirent *rootdir_dot_dot = (struct dirent *) (img + BSIZE*(root_inode->addrs[0]))+1;
 
-  if(rootdir_dot->inum != 1 || rootdir_dot_dot->inum != 0) {
+  if(rootdir_dot->inum != 1 || rootdir_dot_dot->inum != 1) {
     fprintf(stderr, "[Error] Corrupt root . and .. should point to root. Thanks Gabe\n");
     exit(1);
   }
