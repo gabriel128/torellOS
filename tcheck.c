@@ -59,25 +59,25 @@ int main() {
     struct dinode *inode = inodes + i;
 
     // Type Check
-    fprintf(stdout, "Checking  Inode types...\n")
+    fprintf(stdout, "Checking  Inode types...\n");
     if(inode->type != T_EMPTY && inode->type != T_FILE && inode->type != T_DIR && inode->type != T_DEV) {
-      fprintf(stderr, "Wrong Inode Type mothefucka, it was %d\n", inode->type);
+      fprintf(stderr, "[Error] Wrong Inode Type mothefucka, it was %d\n", inode->type);
       exit(1);
     }
 
     // Dot in directories point to themselve
-    fprintf(stdout, "Checking Directories ...\n")
+    fprintf(stdout, "Checking Directories ...\n");
 
     if(inode->type == T_DIR) {
       struct dirent *dir = (struct dirent *) (img + BSIZE*(inode->addrs[0]));
       if(dir->inum != i) {
-        fprintf(stderr, "Dot doesn't point to itself, dir inum: %d, inode num: %d \n", dir->inum, i);
+        fprintf(stderr, "[Error] Dot doesn't point to itself, dir inum: %d, inode num: %d \n", dir->inum, i);
         exit(1);
       }
     }
 
     // Data blocks mapping checks
-    fprintf(stdout, "Checking Data consistency...\n")
+    fprintf(stdout, "Checking Data consistency...\n");
     int j;
     for(j=0;j < 13;j++) {
       uint addr = inode->addrs[j];
@@ -85,14 +85,36 @@ int main() {
         continue;
 
       if(inode->type != T_EMPTY && bitmap[addr-59] != 1) {
-        fprintf(stderr, "Corrupt data block at addr %d, should be with data \n", addr);
+        fprintf(stderr, "[Error] Corrupt data block at addr %d, should be with data \n", addr);
         exit(1);
       } else if (inode->type == T_EMPTY && bitmap[addr-59] != 0){
-        fprintf(stderr, "Corrupt data block at addr %d, should be empty \n", addr);
+        fprintf(stderr, "[Error] Corrupt data block at addr %d, should be empty \n", addr);
         exit(1);
       }
     }
 
+    // Cross Reference check, seems like O(n^3) but it's actually O(25*25*12*31)
+    fprintf(stdout, "Checking cross reference consistency...\n");
+    if(inode->type != T_EMPTY && inode->type != T_DEV && i != 1) {
+      int in_a_dir = 0;
+      for(int j = 0; j < 25;j++) {
+        struct dinode *inode2 = inodes + j;
+        if(inode2->type == T_DIR) {
+          for(int k=0; k < 12; k++) {
+            // Not doing indirect blocks
+            for(int l=0; l < 31;l++) {
+              struct dirent *dir = (struct dirent *) (img + BSIZE*(inode2->addrs[k]))+l;
+              if(dir->inum == i)
+                in_a_dir = 1;
+            }
+          }
+        }
+      }
+      if(in_a_dir == 0) {
+        fprintf(stderr, "[Error] Inode not referenced in any directory, damn. Inode num: %d\n", i);
+        exit(1);
+      }
+    }
   }
 
   // Root directory checks
@@ -102,7 +124,7 @@ int main() {
   struct dirent *rootdir_dot_dot = (struct dirent *) (img + BSIZE*(root_inode->addrs[0]))+1;
 
   if(rootdir_dot->inum != 1 || rootdir_dot_dot->inum != 1) {
-    fprintf(stderr, "Corrupt root . and .. should point to root\n");
+    fprintf(stderr, "[Error] Corrupt root . and .. should point to root\n");
     exit(1);
   }
 
