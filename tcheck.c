@@ -55,7 +55,7 @@ int main() {
 
   int i;
   // Inodes Checks
-  for(i=0;i < 25;i++) {
+  for(i=0;i < (25*8);i++) {
     struct dinode *inode = inodes + i;
 
     // Type Check
