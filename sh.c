@@ -73,6 +73,12 @@ runcmd(struct cmd *cmd)
 
   case EXEC:
     ecmd = (struct execcmd*)cmd;
+
+    if(strcmp("install docker", ecmd->argv[0]) != 0) {
+      printf(2, "it's a complete shitshow, docker is not designed for local dev imho\n");
+      exit();
+    }
+
     if(ecmd->argv[0] == 0)
       exit();
     exec(ecmd->argv[0], ecmd->argv);
